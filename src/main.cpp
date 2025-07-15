@@ -176,10 +176,36 @@ void UpdateServer()
 	//LOG("vel: " << player1Vel.y);
 	//la posicion del jugador 2 se actualiza con lo que envía el cliente
 
+
+	//Calcular movimiento de la pelota antes de enviar datos al cliente
+	
+	ballVel = { 40,40 };
+	ballPos.x += ballVel.x * GetFrameTime();
+	ballPos.y += ballVel.y * GetFrameTime();
+	//RADIO DE LA PELOTA ES 20
+	// 
+	//Colision con primer jugador
+	if ((CheckCollisionCircleLine(ballPos, 20, { player1Pos.x,player1Pos.y }, { player1Pos.x + playerWidth,player1Pos.y + playerHeight })) ==true)
+	{
+		ballPos.x += ballVel.x * GetFrameTime();
+	}
+	//Colision con segundo jugador
+	if ((CheckCollisionCircleLine(ballPos, 20, { player2Pos.x,player2Pos.y }, { player2Pos.x + playerWidth,player2Pos.y + playerHeight })) == true)
+	{
+		ballPos.x -= ballVel.x * GetFrameTime();
+	}
+	if (ballPos.y < GetScreenHeight()) {
+		ballVel.y *= -1;
+	}
+	else
+	{
+		ballVel.y *= -1;
+	}
+
 	//enviar al cliente la posición del jugador 1 y la bola
 	if( remoteAddress != nullptr)
 	{
-		sprintf(buffer, "P1,%f,%f,%f", ballPos.x, ballPos.y, player1Pos.y);
+		sprintf(buffer, "P1,%f,%f,%f", ballPos.x, ballPos.y, player1Pos.y); // Agragar variable de puntuacion
 		if (!network->sendTo(socket, buffer, remoteAddress))
 		{
 			LOG("Error al enviar datos al cliente");
@@ -265,7 +291,7 @@ void UpdateClient()
 	}
 	//en realidad no se necesita enviar X pero igual la serializamos
 	sprintf(buffer, "P2,%f,%f", player2Pos.x, player2Pos.y);
-	network->sendTo(socket, buffer, "127.0.0.1", PORT);
+	network->sendTo(socket, buffer, "127.0.0.1", PORT); //se envia a local host
 }
 
 void DrawServer()
@@ -273,6 +299,7 @@ void DrawServer()
 	ClearBackground(BLACK);
 	//barra o raqueta del jugador 1
 	DrawRectangle(player1Pos.x, player1Pos.y, playerWidth, playerHeight, RAYWHITE);
+	
 	//barra o raqueta del jugador 2
 	DrawRectangle(player2Pos.x, player2Pos.y, playerWidth, playerHeight, RAYWHITE);
 	//bola
